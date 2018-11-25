@@ -1,0 +1,71 @@
+<html>
+    <head>
+            <meta charset="utf-8">
+            <script src="https://cdn.jsdelivr.net/npm/eosjs-ecc@4.0.4/lib/eosjs-ecc.min.js"
+            integrity="sha512-dYFDmK/d9r3/NCp6toLtfkwOjSMRBaEzaGAx1tfRItC0nsI0hVLERk05iNBQR7uDNI7ludYhcBI4vUiFHdjsTQ=="
+            crossorigin="anonymous">
+            </script>
+            <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous">
+            </script>
+    </head>
+    <body>
+        <div id="info"></div>
+        <button type="button" onclick="verify()">verify</button>
+        <div id="result"></div>
+        <script>
+            var bet_id = getParameterValue("bet_id");
+            var publickey = getParameterValue("publickey");
+            var user_seed = getParameterValue("user_seed");
+            var seed_sha256 = getParameterValue("seed");
+            var signature = getParameterValue("signature");
+            var timestamp = getParameterValue("timestamp");
+            
+            function getParameterValue(parameter)
+            {
+                parameter = parameter.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+                var regexS = "[\\?&]" + parameter + "=([^&#]*)";
+                var regex = new RegExp(regexS);
+                var results = regex.exec(window.location.href);
+                if(results == null)
+                    return "";
+                else
+                    return results[1];
+            }
+
+            function verify()
+            {
+                var seed = eosjs_ecc.sha256(bet_id + user_seed + timestamp);
+                var result = eosjs_ecc.verifyHash(signature,seed,publickey);
+                var signature_sha256 = eosjs_ecc.sha256(signature);
+                var lastSixNum = signature_sha256.substr(signature_sha256.length - 6, 6);
+                if(result)
+                {
+                    var html = ''
+                    html += '<ul>';
+                    html += '<li><p>last 6 : '+lastSixNum+'('+ parseInt(lastSixNum,16)+')</p></li>';
+                    html += '<li><p>roll number : '+(parseInt(lastSixNum,16) %6 + 1)+'</p></li>';             
+                    html += '</ul>';
+                    $('#result').html(html);
+                }
+            }
+
+            (function($) {
+                var $info = $("#info");
+                var html = "";
+                html += '<ul>';
+                html += '<li><p>bet id : '+bet_id+'</p></li>';
+                html += '<li><p>user seed : '+user_seed+'</p></li>';
+                html += '<li><p>timestamp : '+timestamp+'</p></li>';
+                html += '<li><p>public key : '+publickey+'</p></li>';
+                html += '<li><p>seed(sha256) : '+seed_sha256+'</p></li>';
+                html += '<li><p>signature : '+signature+'</p></li>';             
+                html += '</ul>';
+                $info.html(html);
+
+            })(jQuery);
+        </script>
+    </body>
+</html>
